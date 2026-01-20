@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Mis Favoritos - VivaStream{% endblock %}
+
+{% block content %}
+<div class="space-y-2" id="favorites-main-container">
+    <div id="favorites-stats" class="border-b border-gray-700 pb-6 mx-auto w-full px-4 md:px-6 lg:px-0 md:max-w-2xl lg:max-w-none" style="max-width: min(100%, calc((100vw - 4rem) * 4 / 6))">
+        
+        {% if peliculas_favoritas %}
+            <div id="favorites-stats" hx-get="{% url 'movies:favorites_stats' %}" hx-trigger="favorito-eliminado">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 animate-stagger">
+                    <div class="bg-dark-gray rounded-lg p-6 border border-gray-700">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-gray-400 text-sm mb-2">Total</p>
+                                <p id="stat-total" class="text-4xl font-bold text-white">{{ total_favoritos }}</p>
+                            </div>
+                            <svg class="w-12 h-12 text-gray-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-dark-gray rounded-lg p-6 border border-gray-700">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-gray-400 text-sm mb-2">Duración</p>
+                                <p class="text-4xl font-bold text-white"><span id="stat-duracion">{{ duracion_total|floatformat:0 }}</span><span class="text-sm text-gray-400 ml-1">min</span></p>
+                            </div>
+                            <svg class="w-12 h-12 text-gray-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-dark-gray rounded-lg p-6 border border-gray-700">
+                        <p class="text-gray-400 text-sm mb-3">Top Géneros</p>
+                        <div id="stat-generos">
+                            {% if generos_favoritos %}
+                                <div class="flex gap-2 overflow-x-auto scrollbar-hide">
+                                    {% for genero, cantidad in generos_favoritos|slice:":4" %}
+                                        <div class="flex items-center gap-1.5 px-3 py-1.5 bg-black rounded-full text-nowrap flex-shrink-0">
+                                            <span class="text-white text-sm font-medium">{{ genero }}</span>
+                                            <span class="bg-hbo-blue px-2 py-0.5 rounded-full text-sm font-bold text-white">{{ cantidad }}</span>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-gray-500 text-sm">Agrega favoritos para ver géneros</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    {% if peliculas_favoritas %}
+    <div id="favorites-filters" class="mx-auto w-full px-4 md:px-6 lg:px-0 md:max-w-2xl lg:max-w-none" style="max-width: min(100%, calc((100vw - 4rem) * 4 / 6))">
+        <div class="bg-dark-gray rounded-lg p-5 border border-gray-700 flex flex-col md:flex-row md:items-end gap-4">
+            <div class="w-52">
+                <label for="genre-filter" class="block text-sm font-medium text-gray-400 mb-2">Filtrar</label>
+                <select 
+                    id="genre-filter"
+                    name="genero"
+                    value="{{ genero_filter }}"
+                    hx-get="{% url 'movies:favorites' %}"
+                    hx-include="[name='order']"
+                    hx-target="#favorites-container"
+                    hx-swap="innerHTML"
+                    class="w-full px-3 py-2 bg-black border border-gray-600 text-white text-sm rounded focus:outline-none focus:border-hbo-blue">
+                    <option value="">Todos los géneros</option>
+                    {% for genero in todos_los_generos %}
+                        <option value="{{ genero.id }}" {% if genero.id|stringformat:"s" == genero_filter %}selected{% endif %}>
+                            {{ genero.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="w-52">
+                <label for="sort-order" class="block text-sm font-medium text-gray-400 mb-2">Ordenar</label>
+                <select 
+                    id="sort-order"
+                    name="order"
+                    value="{{ order_by }}"
+                    hx-get="{% url 'movies:favorites' %}"
+                    hx-include="[name='genero']"
+                    hx-target="#favorites-container"
+                    hx-swap="innerHTML"
+                    class="w-full px-3 py-2 bg-black border border-gray-600 text-white text-sm rounded focus:outline-none focus:border-hbo-blue">
+                    <option value="-fecha_agregado" {% if order_by == "-fecha_agregado" %}selected{% endif %}>
+                        Más Recientes
+                    </option>
+                    <option value="fecha_agregado" {% if order_by == "fecha_agregado" %}selected{% endif %}>
+                        Más Antiguos
+                    </option>
+                    <option value="titulo" {% if order_by == "titulo" %}selected{% endif %}>
+                        A - Z
+                    </option>
+                    <option value="-titulo" {% if order_by == "-titulo" %}selected{% endif %}>
+                        Z - A
+                    </option>
+                </select>
+            </div>
+            <div class="flex-1"></div>
+            
+            <div id="clear-filters-btn" style="display: none;">
+                <a 
+                    href="{% url 'movies:favorites' %}"
+                    hx-get="{% url 'movies:favorites' %}"
+                    hx-target="#favorites-container"
+                    hx-swap="innerHTML"
+                    onclick="resetFilters()"
+                    class="inline-flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-medium text-white transition cursor-pointer">
+                    ✕ Limpiar
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div id="favorites-container">
+        {% if peliculas_favoritas %}
+        <div class="mx-auto w-full px-4 md:px-6 lg:px-0 md:max-w-2xl lg:max-w-none" style="max-width: min(100%, calc((100vw - 4rem) * 4 / 6))">
+            <div id="carousel-container" class="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-3" style="scroll-behavior: smooth; overflow-y: visible;">
+                {% for pelicula in peliculas_favoritas %}
+                        <div class="group relative flex-shrink-0 snap-center" style="width: calc(25% - 0.75rem); min-width: calc(25% - 0.75rem);">
+                            <a href="{% url 'movies:movie_detail' pelicula.id %}" class="block">
+                                <div class="relative rounded-lg overflow-hidden shadow-lg transition-all duration-700 ease-in-out transform hover:scale-103 hover:shadow-2xl cursor-pointer">
+                                    {% if pelicula.imagen %}
+                                        <img src="{{ pelicula.imagen.url }}" 
+                                             alt="{{ pelicula.titulo }}"
+                                             class="w-full h-72 object-cover">
+                                    {% else %}
+                                        <div class="w-full h-72 bg-dark-gray flex items-center justify-center">
+                                            <span class="text-gray-500">Sin imagen</span>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-80 transition flex flex-col justify-end">
+                                        <div class="opacity-0 group-hover:opacity-100 transition p-4 w-full space-y-2">
+                                            <h3 class="font-bold text-lg">{{ pelicula.titulo }}</h3>
+                                            <p class="text-sm text-gray-300">{{ pelicula.duracion_minutos }} min {% if pelicula.año_publicacion %}• {{ pelicula.año_publicacion }}{% endif %}</p>
+                                            <div class="flex gap-1 flex-wrap">
+                                                {% for genero in pelicula.generos.all %}
+                                                    <span class="bg-hbo-blue px-2 py-1 rounded text-xs">{{ genero.nombre }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="absolute top-2 right-2 bg-black bg-opacity-70 rounded-full p-2">
+                                        <svg class="w-5 h-5 text-hbo-blue" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </a>
+                            
+                            <button 
+                                hx-post="{% url 'movies:toggle_favorite' pelicula.id %}"
+                                hx-target="closest [style*='min-width']"
+                                hx-swap="outerHTML swap:0.3s"
+                                hx-on::afterSwap="htmx.trigger('#favorites-stats', 'favorito-eliminado')"
+                                class="absolute top-2 left-2 bg-red-600 hover:bg-red-700 rounded-full p-2 opacity-0 group-hover:opacity-100 transition z-10"
+                                title="Quitar de favoritos">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                {% endfor %}
+            </div>
+        </div>
+        </div>
+        {% else %}
+        <div class="text-center py-20">
+            <svg class="w-24 h-24 mx-auto text-gray-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+            <h2 class="text-2xl font-bold text-gray-300 mb-4">Aún no tienes películas favoritas</h2>
+            <p class="text-gray-400 mb-8">Explora nuestro catálogo y marca tus películas favoritas para verlas aquí</p>
+            <a href="{% url 'movies:movies_catalog' %}" class="inline-block bg-hbo-blue hover:bg-blue-700 px-8 py-3 rounded-lg font-bold transition">
+                Explorar Películas
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+<script>
+function updateClearButtonVisibility() {
+    const genreSelect = document.getElementById('genre-filter');
+    const orderSelect = document.getElementById('sort-order');
+    const clearBtn = document.getElementById('clear-filters-btn');
+    
+    if (clearBtn && genreSelect && orderSelect) {
+        const hasGenreFilter = genreSelect.value !== '';
+        const hasOrderFilter = orderSelect.value !== '-fecha_agregado';
+        
+        if (hasGenreFilter || hasOrderFilter) {
+            clearBtn.style.display = 'block';
+        } else {
+            clearBtn.style.display = 'none';
+        }
+    }
+}
+
+function resetFilters() {
+    const genreSelect = document.getElementById('genre-filter');
+    const orderSelect = document.getElementById('sort-order');
+    
+    if (genreSelect) genreSelect.value = '';
+    if (orderSelect) orderSelect.value = '-fecha_agregado';
+    
+    setTimeout(function() {
+        updateClearButtonVisibility();
+    }, 100);
+}
+
+updateClearButtonVisibility();
+
+document.getElementById('genre-filter')?.addEventListener('change', updateClearButtonVisibility);
+document.getElementById('sort-order')?.addEventListener('change', updateClearButtonVisibility);
+
+document.addEventListener('htmx:afterSettle', function(event) {
+    updateClearButtonVisibility();
+});
+
+document.addEventListener('htmx:afterRequest', function(event) {
+    if (event.detail.xhr.responseURL && event.detail.xhr.responseURL.includes('/favorito/toggle/')) {
+        setTimeout(function() {
+            const favoritosRestantes = event.detail.xhr.getResponseHeader('X-Favoritos-Restantes');
+            
+            const generoSelect = document.getElementById('genre-filter');
+            const orderSelect = document.getElementById('sort-order');
+            const genero = generoSelect ? generoSelect.value : '';
+            const order = orderSelect ? orderSelect.value : '-fecha_agregado';
+            
+            let url = "{% url 'movies:favorites' %}";
+            let params = new URLSearchParams();
+            if (genero) params.append('genero', genero);
+            if (order !== '-fecha_agregado') params.append('order', order);
+            if (params.toString()) url += '?' + params.toString();
+            
+            htmx.ajax('GET', url, {
+                target: '#favorites-container',
+                swap: 'innerHTML'
+            });
+            
+            fetch("{% url 'movies:favorites' %}")
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    const nuevoTotal = doc.querySelector('#stat-total')?.textContent || '';
+                    const nuevaDuracion = doc.querySelector('#stat-duracion')?.textContent || '';
+                    const nuevoGeneros = doc.querySelector('#stat-generos')?.innerHTML || '';
+                    
+                    const statsSection = document.getElementById('favorites-stats');
+                    const filtersSection = document.getElementById('favorites-filters');
+                    
+                    if (favoritosRestantes === 'false') {
+                        if (statsSection) {
+                            statsSection.style.display = 'none';
+                        }
+                        if (filtersSection) {
+                            filtersSection.style.display = 'none';
+                        }
+                    } else {
+                        if (statsSection) {
+                            statsSection.style.display = 'block';
+                        }
+                        if (filtersSection) {
+                            filtersSection.style.display = 'block';
+                        }
+                        
+                        const totalElement = document.getElementById('stat-total');
+                        const duracionElement = document.getElementById('stat-duracion');
+                        const generosElement = document.getElementById('stat-generos');
+                        
+                        if (totalElement && nuevoTotal !== totalElement.textContent) {
+                            totalElement.textContent = nuevoTotal;
+                        }
+                        
+                        if (duracionElement && nuevaDuracion !== duracionElement.textContent) {
+                            duracionElement.textContent = nuevaDuracion;
+                        }
+                        
+                        if (generosElement && nuevoGeneros !== generosElement.innerHTML) {
+                            generosElement.innerHTML = nuevoGeneros;
+                        }
+                    }
+                    
+                    if (typeof initAllCarousels === 'function') {
+                        initAllCarousels();
+                    }
+                })
+                .catch(error => console.error('Error actualizando estadísticas:', error));
+        }, 100);
+    }
+});
+</script>
+
+
+{% endblock %}

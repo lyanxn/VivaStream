@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Viendo: {{ pelicula.titulo }} - VivaStream{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="mb-4">
+        <h1 class="text-3xl font-bold mb-2">{{ pelicula.titulo }}</h1>
+        <div class="flex items-center gap-4 text-sm text-gray-400">
+            <div class="flex gap-2">
+                {% for genero in pelicula.generos.all %}
+                    <span class="bg-hbo-blue text-white px-2 py-1 rounded">{{ genero.nombre }}</span>
+                {% endfor %}
+            </div>
+            <span>{{ pelicula.duracion_formateada }}</span>
+            {% if historial and not historial.completado %}
+                <span class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                    </svg>
+                    Continuar desde {{ historial.progreso_porcentaje|floatformat:0 }}%
+                </span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="bg-black rounded-lg overflow-hidden shadow-2xl mb-2">
+        <video 
+            id="video-player"
+            class="js-player"
+            playsinline
+            controls
+            data-timestamp="{{ timestamp_inicial|default:0 }}"
+            aria-label="Reproductor de {{ pelicula.titulo }}">
+            <source src="{{ pelicula.enlace_stream }}" type="video/mp4">
+            Tu navegador no soporta la reproducción de videos.
+        </video>
+    </div>
+    
+    <div class="flex flex-wrap gap-4 items-center justify-between mb-2">
+        <div class="flex gap-3">
+            <a href="{% url 'movies:movie_detail' pelicula.id %}" 
+               class="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Volver a detalles
+            </a>
+            
+            {% include 'movies/components/favorite_button.html' %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+<script>
+    const plyrConfig = {
+        controls: [
+            'play-large',
+            'play',
+            'progress',
+            'current-time',
+            'duration',
+            'mute',
+            'volume',
+            'captions',
+            'settings',
+            'pip',
+            'airplay',
+            'fullscreen'
+        ],
+        settings: ['captions', 'quality', 'speed', 'loop'],
+        speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] },
+        autoplay: false,
+        keyboard: { focused: true, global: true },
+    };
+
+    const player = new Plyr('#video-player', plyrConfig);
+    
+    const videoElement = document.getElementById('video-player');
+    
+    const timestampInicial = parseInt(videoElement.getAttribute('data-timestamp')) || 0;
+    
+    let lastSaveTime = 0;
+    const saveInterval = 10000; // Guardamos cada 10 segundos
+    
+    player.on('ready', () => {
+        if (timestampInicial > 0) {
+            player.currentTime = timestampInicial;
+            console.log('Continuando desde:', timestampInicial, 'segundos');
+        }
+    });
+    
+    function saveProgress() {
+        const currentTime = Math.floor(player.currentTime);
+        
+        if (currentTime < 5) return;
+        
+        const formData = new FormData();
+        formData.append('timestamp', currentTime);
+        
+        const csrftoken = getCookie('csrftoken');
+        if (csrftoken) {
+            formData.append('csrfmiddlewaretoken', csrftoken);
+        }
+        
+        fetch('{% url "movies:update_progress" pelicula.id %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('Progreso guardado:', currentTime, 'segundos');
+            } else if (response.status === 403) {
+                console.warn('Token CSRF inválido o expirado');
+            }
+        })
+        .catch(error => {
+            console.error('Error al guardar progreso:', error);
+        });
+    }
+    
+    player.on('timeupdate', () => {
+        const now = Date.now();
+        if (now - lastSaveTime >= saveInterval) {
+            saveProgress();
+            lastSaveTime = now;
+        }
+    });
+    
+    player.on('pause', () => {
+        saveProgress();
+    });
+    
+    player.on('ended', () => {
+        saveProgress();
+    });
+    
+    window.addEventListener('beforeunload', () => {
+        const currentTime = Math.floor(player.currentTime);
+        if (currentTime >= 5) {
+            const formData = new FormData();
+            formData.append('timestamp', currentTime);
+            
+            const csrftoken = getCookie('csrftoken');
+            if (csrftoken) {
+                formData.append('csrfmiddlewaretoken', csrftoken);
+            }
+            
+            navigator.sendBeacon(
+                '{% url "movies:update_progress" pelicula.id %}',
+                formData
+            );
+        }
+    });
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

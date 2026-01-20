@@ -1,0 +1,203 @@
+:root {
+    --netflix-red: #E50914;
+    --dark-bg: #141414;
+    --dark-gray: #221f1f;
+    --progress-bar-height: 4px;
+    --transition-duration: 0.3s;
+}
+
+.progress-bar-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--progress-bar-height);
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: var(--netflix-red);
+    transition: width var(--transition-duration) ease-out;
+    width: var(--progress, 0%);
+}
+
+[data-progress] {
+    width: calc(var(--progress-value, 0) * 1%);
+}
+
+div[data-progress] {
+    height: 100%;
+    background-color: var(--netflix-red);
+    transition: width var(--transition-duration) ease-out;
+    width: attr(data-progress) !important;
+}
+
+.movie-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.movie-card:hover {
+    transform: scale(1.05);
+}
+
+.movie-card-image {
+    width: 100%;
+    height: 288px;
+    object-fit: cover;
+    display: block;
+}
+
+.movie-card-no-image {
+    width: 100%;
+    height: 288px;
+    background-color: var(--dark-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.movie-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0);
+    transition: background-color var(--transition-duration) ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.movie-card:hover .movie-overlay {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.movie-overlay-content {
+    opacity: 0;
+    transition: opacity var(--transition-duration) ease;
+    text-align: center;
+    padding: 16px;
+}
+
+.movie-card:hover .movie-overlay-content {
+    opacity: 1;
+}
+
+[data-progress] {
+    width: calc(var(--progress-value, 0) * 1%);
+}
+
+.genre-tag {
+    background-color: var(--netflix-red);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.progress-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity var(--transition-duration) ease;
+}
+
+.movie-card:hover .progress-indicator {
+    opacity: 1;
+}
+
+.progress-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--netflix-red);
+    font-weight: bold;
+}
+
+.progress-icon {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.section-meta {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.section-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 48px 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-state-text {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 20px;
+}
+
+.empty-state-button {
+    display: inline-block;
+    background: var(--netflix-red);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-top: 16px;
+    transition: background-color var(--transition-duration) ease;
+}
+
+.empty-state-button:hover {
+    background-color: #c4070b;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+.scale-in {
+    animation: scaleIn 0.3s ease-in-out;
+}

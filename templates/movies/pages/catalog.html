@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}{{ titulo_pagina }} - VivaStream{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-4xl font-bold mb-8">Catálogo de Películas</h1>
+    
+    {% if peliculas_por_genero %}
+        {% for genero, peliculas in peliculas_por_genero.items %}
+            <section class="space-y-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-1 h-8 bg-hbo-blue rounded-full"></div>
+                    <h2 class="text-2xl font-semibold text-white">{{ genero.nombre }}</h2>
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute inset-0 h-80 bg-gradient-to-r from-gray-900/30 via-gray-950/20 to-transparent pointer-events-none rounded-lg"></div>
+                    
+                    <div id="carousel-genero-{{ genero.id }}" class="relative z-10 flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-2 py-3 rounded-lg" style="scroll-behavior: smooth; overflow-y: visible;">
+                        {% for pelicula in peliculas %}
+                            <div class="group relative flex-shrink-0 snap-center" style="width: calc(20% - 0.8rem); min-width: calc(20% - 0.8rem);">
+                                <a href="{% url 'movies:movie_detail' pelicula.id %}" class="block">
+                                <div class="relative rounded-lg overflow-hidden shadow-lg transition-all duration-700 ease-in-out transform hover:scale-103 hover:shadow-2xl cursor-pointer">
+                                    {% if pelicula.imagen %}
+                                        <img src="{{ pelicula.imagen.url }}" 
+                                             alt="{{ pelicula.titulo }}"
+                                             class="w-full h-72 object-cover">
+                                    {% else %}
+                                        <div class="w-full h-72 bg-dark-gray flex items-center justify-center">
+                                            <span class="text-gray-500">Sin imagen</span>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-80 transition flex items-end">
+                                        <div class="opacity-0 group-hover:opacity-100 transition p-4 w-full space-y-2">
+                                            <h3 class="font-bold text-lg">{{ pelicula.titulo }}</h3>
+                                            <p class="text-sm text-gray-300">{{ pelicula.duracion_minutos }} min {% if pelicula.año_publicacion %}• {{ pelicula.año_publicacion }}{% endif %}</p>
+                                            <div class="flex gap-1 flex-wrap">
+                                                {% for genero_item in pelicula.generos.all %}
+                                                    <span class="bg-hbo-blue px-2 py-1 rounded text-xs">{{ genero_item.nombre }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                    </div>
+                </div>
+            </section>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-20">
+            <p class="text-gray-400 text-xl">No hay películas disponibles aún.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+</style>
+{% endblock %}

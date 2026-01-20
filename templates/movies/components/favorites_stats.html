@@ -1,0 +1,43 @@
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 animate-stagger">
+    <div class="bg-dark-gray rounded-lg p-6 border border-gray-700">
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <p class="text-gray-400 text-sm mb-2">Total</p>
+                <p id="stat-total" class="text-4xl font-bold text-white">{{ total_favoritos }}</p>
+            </div>
+            <svg class="w-12 h-12 text-gray-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
+            </svg>
+        </div>
+    </div>
+    
+    <div class="bg-dark-gray rounded-lg p-6 border border-gray-700">
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <p class="text-gray-400 text-sm mb-2">Duración</p>
+                <p class="text-4xl font-bold text-white"><span id="stat-duracion">{{ duracion_total|floatformat:0 }}</span><span class="text-sm text-gray-400 ml-1">min</span></p>
+            </div>
+            <svg class="w-12 h-12 text-gray-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+            </svg>
+        </div>
+    </div>
+    
+    <div class="bg-dark-gray rounded-lg p-6 border border-gray-700">
+        <p class="text-gray-400 text-sm mb-3">Top Géneros</p>
+        <div id="stat-generos">
+            {% if generos_favoritos %}
+                <div class="flex gap-2 overflow-x-auto scrollbar-hide">
+                    {% for genero, cantidad in generos_favoritos %}
+                        <div class="flex items-center gap-1.5 px-3 py-1.5 bg-black rounded-full text-nowrap flex-shrink-0">
+                            <span class="text-white text-sm font-medium">{{ genero }}</span>
+                            <span class="bg-hbo-blue px-2 py-0.5 rounded-full text-sm font-bold text-white">{{ cantidad }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-sm">Agrega favoritos para ver géneros</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
