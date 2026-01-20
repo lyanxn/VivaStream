@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Enlace de Activación Inválido - VivaStream{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center">
+    <div class="max-w-2xl w-full mt-0 text-center">
+        <div class="bg-dark-gray rounded-lg shadow-2xl p-8">
+        <div style="font-size: 64px; margin-bottom: 20px;">
+            {% if is_expired %}
+            ⏰
+            {% else %}
+            ❌
+            {% endif %}
+        </div>
+        
+        <h1 class="text-4xl font-bold text-orange-500 mb-4">
+            {% if is_expired %}
+            Enlace de Activación Expirado
+            {% else %}
+            Enlace de Activación Inválido
+            {% endif %}
+        </h1>
+        
+        {% if is_expired %}
+        <p class="text-lg text-gray-300 mb-6">
+            El enlace de activación ha expirado (válidos por 3 días).
+        </p>
+        <p class="text-lg text-gray-300 mb-6">
+            No te preocupes, puedes solicitar un nuevo correo de activación.
+        </p>
+        {% else %}
+        <p class="text-lg text-gray-300 mb-6">
+            El enlace que utilizaste no es válido o ha expirado.
+        </p>
+        <p class="text-lg text-gray-300 mb-6">
+            Esto puede ocurrir si:
+        </p>
+        <ul class="text-gray-300 text-left bg-gray-800 p-6 rounded-lg mb-6 space-y-2">
+            <li>• El enlace fue alterado o copiado incorrectamente</li>
+            <li>• Pasaron más de 3 días desde tu registro</li>
+            <li>• Ya activaste tu cuenta anteriormente</li>
+            <li>• El correo llegó a la carpeta de spam</li>
+        </ul>
+        {% endif %}
+        
+        <div class="bg-gray-800 p-6 rounded-lg mb-6">
+            <h2 class="text-xl text-white font-bold mb-4">¿Qué puedo hacer?</h2>
+            <p class="text-gray-300 mb-4">
+                Solicita que reenviemos el correo de activación a tu dirección de email.
+            </p>
+            <a href="{% url 'movies:resend_activation' %}" class="inline-block bg-hbo-blue hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition duration-200 mb-3">
+                Reenviar Correo de Activación
+            </a>
+        </div>
+        
+        <p class="text-gray-400 mb-4">
+            ¿Problemas para recuperar tu cuenta?
+        </p>
+        <a href="{% url 'movies:register' %}" class="text-hbo-blue hover:underline">
+            Crear una nueva cuenta
+        </a>
+        
+        <div class="mt-8 pt-6 border-t border-gray-700">
+            <a href="{% url 'movies:landing_page' %}" class="text-gray-400 hover:text-white">← Volver a la página principal</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% if query_length >= 2 %}
+    {% if resultados %}
+        {% for pelicula in resultados %}
+            <a href="{% url 'movies:movie_detail' pelicula.id %}" 
+               class="navbar-search-result-item">
+                {% if pelicula.imagen %}
+                    <img src="{{ pelicula.imagen.url }}" alt="{{ pelicula.titulo }}" class="navbar-search-poster">
+                {% else %}
+                    <div class="navbar-search-poster navbar-search-no-poster"></div>
+                {% endif %}
+                
+                <div class="navbar-search-content">
+                    <div class="navbar-search-title">{{ pelicula.titulo }}</div>
+                    <div class="navbar-search-description">{{ pelicula.descripcion|truncatewords:12 }}</div>
+                    
+                    <div class="navbar-search-meta">
+                        {% for genero in pelicula.generos.all|slice:':2' %}
+                            <span class="navbar-search-badge">{{ genero.nombre }}</span>
+                        {% endfor %}
+                        {% if pelicula.duracion %}
+                            <span class="navbar-search-duration">{{ pelicula.duracion_minutos }} min</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    {% else %}
+        <div class="navbar-search-empty">
+            No hay películas para "{{ query }}"
+        </div>
+    {% endif %}
+{% else %}
+    {% if query %}
+        <div class="navbar-search-empty">
+            Escribe al menos 2 caracteres
+        </div>
+    {% endif %}
+{% endif %}

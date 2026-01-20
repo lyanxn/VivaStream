@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}{{ titulo_pagina }} - VivaStream{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    {% if pelicula_sugerida %}
+        <section class="mb-12">
+            <div class="flex items-center gap-2 mb-3">
+                <div class="w-1 h-8 bg-hbo-blue rounded-full"></div>
+                <h2 class="text-lg font-semibold text-white uppercase tracking-wider">Recomendado para ti</h2>
+            </div>
+            
+            <div class="relative rounded-lg overflow-hidden shadow-lg" style="height: 420px;">
+                <div class="absolute inset-0">
+                    {% if pelicula_sugerida.imagen %}
+                        <img src="{{ pelicula_sugerida.imagen.url }}" 
+                             alt="{{ pelicula_sugerida.titulo }}"
+                             class="w-full h-full object-cover">
+                    {% else %}
+                        <div class="w-full h-full bg-dark-gray"></div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent"></div>
+                </div>
+                
+                <div class="relative h-full flex flex-col justify-end items-start p-8">
+                    <h1 class="text-5xl md:text-6xl font-bold text-white mb-3 max-w-2xl leading-tight">
+                        {{ pelicula_sugerida.titulo }}
+                    </h1>
+                    
+                    {% if pelicula_sugerida.generos.all %}
+                        <div class="flex gap-2 mb-6 flex-wrap">
+                            {% for genero in pelicula_sugerida.generos.all|slice:":3" %}
+                                <span class="bg-hbo-blue px-3 py-1 rounded text-xs font-bold text-white uppercase">
+                                    {{ genero.nombre }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="flex items-center gap-4 mb-4 text-gray-200">
+                        <div class="flex items-center gap-1">
+                            <svg class="w-5 h-5 text-hbo-blue" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                            <span class="font-semibold">{{ pelicula_sugerida.calificacion_promedio|default:"Sin calificar" }}</span>
+                        </div>
+                        <span class="text-gray-400">•</span>
+                        <span>{{ pelicula_sugerida.duracion_minutos }} min</span>
+                        {% if pelicula_sugerida.año_publicacion %}
+                            <span class="text-gray-400">•</span>
+                            <span>{{ pelicula_sugerida.año_publicacion }}</span>
+                        {% endif %}
+                        {% if pelicula_sugerida.total_calificaciones %}
+                            <span class="text-gray-400">•</span>
+                            <span class="text-gray-400">({{ pelicula_sugerida.total_calificaciones }} calificación{{ pelicula_sugerida.total_calificaciones|pluralize:"es" }})</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <a href="{% url 'movies:watch_movie' pelicula_sugerida.id %}" 
+                           class="flex items-center gap-2 bg-hbo-blue hover:bg-blue-700 px-8 py-4 rounded-lg font-bold text-white transition-colors duration-300">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M6.4 13.6L13.6 10 6.4 6.4v7.2z"/>
+                            </svg>
+                            Ver ahora
+                        </a>
+                        <a href="{% url 'movies:movie_detail' pelicula_sugerida.id %}" 
+                           class="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 px-8 py-4 rounded-lg font-bold text-white transition-colors duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Más información
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+    
+    {% if peliculas_continuar %}
+        <section class="space-y-4 mb-12">
+            <div class="flex items-center gap-2">
+                <div class="w-1 h-8 bg-hbo-blue rounded-full"></div>
+                <h2 class="text-2xl font-semibold text-white">Continuar Viendo</h2>
+            </div>
+            
+            <div class="relative">
+                <div class="absolute inset-0 h-80 bg-gradient-to-r from-gray-900/30 via-gray-950/20 to-transparent pointer-events-none rounded-lg"></div>
+                
+                <div id="carousel-continuar" class="relative z-10 flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-2 py-3 rounded-lg" style="scroll-behavior: smooth; overflow-y: visible;">
+                    {% for item in peliculas_continuar %}
+                        <a href="{% url 'movies:watch_movie' item.pelicula.id %}" class="group relative flex-shrink-0 snap-center" style="width: calc(16.666% - 0.667rem); min-width: calc(16.666% - 0.667rem);" aria-label="Ver {{ item.pelicula.titulo }} - {{ item.progreso|default:0|floatformat:0 }}% visto">
+                            <div class="relative rounded-lg overflow-hidden shadow-lg transition-all duration-700 ease-in-out transform hover:scale-103 hover:shadow-2xl cursor-pointer">
+                                {% if item.pelicula.imagen %}
+                                    <img src="{{ item.pelicula.imagen.url }}" 
+                                         alt="{{ item.pelicula.titulo }}"
+                                         class="w-full h-72 object-cover">
+                                {% else %}
+                                    <div class="w-full h-72 bg-dark-gray flex items-center justify-center">
+                                        <span class="text-gray-500 text-sm">Sin imagen</span>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="absolute bottom-0 left-0 right-0 h-2 bg-gray-700" role="progressbar" aria-valuenow="{{ item.progreso|default:0|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100" aria-label="Progreso de reproducción">
+                                    <div class="h-full bg-hbo-blue transition-all duration-500" data-progress="{{ item.progreso|default:0|floatformat:0 }}"></div>
+                                </div>
+                                
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-80 transition flex flex-col items-end justify-end" role="presentation">
+                                    <div class="opacity-0 group-hover:opacity-100 transition w-full p-4 bg-gradient-to-t from-black to-transparent">
+                                        <h3 class="font-bold text-lg mb-1">{{ item.pelicula.titulo }}</h3>
+                                        <p class="text-sm text-gray-300 mb-2">{{ item.pelicula.duracion_minutos }} min {% if item.pelicula.año_publicacion %}• {{ item.pelicula.año_publicacion }}{% endif %}</p>
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2 text-sm text-white font-semibold">
+                                                <svg class="w-4 h-4 text-hbo-blue" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M6 4l10 6-10 6V4z"/>
+                                                </svg>
+                                                {{ item.progreso|default:0|floatformat:0 }}% visto
+                                            </div>
+                                            <div class="bg-hbo-blue rounded-full p-2">
+                                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M6 4l10 6-10 6V4z"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+    {% if generos_usuario %}
+        {% for item in generos_usuario %}
+            <section class="space-y-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-1 h-8 bg-hbo-blue rounded-full"></div>
+                    <h2 class="text-2xl font-semibold text-white">{{ item.genero.nombre }}</h2>
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute inset-0 h-80 bg-gradient-to-r from-gray-900/30 via-gray-950/20 to-transparent pointer-events-none rounded-lg"></div>
+                    
+                    <div class="relative z-10 flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-2 py-3 rounded-lg" style="scroll-behavior: smooth; overflow-y: visible;">
+                        {% for pelicula in item.peliculas %}
+                            <div class="group relative flex-shrink-0 snap-center" style="width: calc(20% - 0.8rem); min-width: calc(20% - 0.8rem);">
+                                <a href="{% url 'movies:movie_detail' pelicula.id %}" class="block" aria-label="Ver detalles de {{ pelicula.titulo }}">
+                                    <div class="relative rounded-lg overflow-hidden shadow-lg transition-all duration-700 ease-in-out transform hover:scale-103 hover:shadow-2xl cursor-pointer">
+                                        {% if pelicula.imagen %}
+                                            <img src="{{ pelicula.imagen.url }}" 
+                                                 alt="{{ pelicula.titulo }}"
+                                                 class="w-full h-72 object-cover">
+                                        {% else %}
+                                            <div class="w-full h-72 bg-dark-gray flex items-center justify-center">
+                                                <span class="text-gray-500">Sin imagen</span>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-80 transition flex items-end" role="presentation">
+                                            <div class="opacity-0 group-hover:opacity-100 transition p-4 w-full space-y-2">
+                                                <h3 class="font-bold text-lg">{{ pelicula.titulo }}</h3>
+                                                <p class="text-sm text-gray-300">{{ pelicula.duracion_minutos }} min {% if pelicula.año_publicacion %}• {{ pelicula.año_publicacion }}{% endif %}</p>
+                                                <div class="flex gap-1 flex-wrap">
+                                                    {% for genero in pelicula.generos.all %}
+                                                        <span class="bg-hbo-blue px-2 py-1 rounded text-xs">{{ genero.nombre }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+        {% endfor %}
+    {% endif %}
+    
+    {% if peliculas_top_vistas %}
+        <section class="space-y-4">
+            <div class="flex items-center gap-2">
+                <div class="w-1 h-8 bg-hbo-blue rounded-full"></div>
+                <h2 class="text-2xl font-semibold text-white">Top 5 Películas Más Vistas</h2>
+            </div>
+            
+            <div class="relative">
+                <div class="absolute inset-0 h-80 bg-gradient-to-r from-gray-900/30 via-gray-950/20 to-transparent pointer-events-none rounded-lg"></div>
+                
+                <div class="relative z-10 flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-2 py-3 rounded-lg" style="scroll-behavior: smooth; overflow-y: visible;">
+                    {% for pelicula in peliculas_top_vistas %}
+                        <div class="group relative flex-shrink-0 snap-center" style="width: calc(20% - 0.8rem); min-width: calc(20% - 0.8rem);">
+                            <a href="{% url 'movies:movie_detail' pelicula.id %}" class="block" aria-label="Ver detalles de {{ pelicula.titulo }}">
+                                <div class="relative rounded-lg overflow-hidden shadow-lg transition-all duration-700 ease-in-out transform hover:scale-103 hover:shadow-2xl cursor-pointer">
+                                    {% if pelicula.imagen %}
+                                        <img src="{{ pelicula.imagen.url }}" 
+                                             alt="{{ pelicula.titulo }}"
+                                             class="w-full h-72 object-cover">
+                                    {% else %}
+                                        <div class="w-full h-72 bg-dark-gray flex items-center justify-center">
+                                            <span class="text-gray-500">Sin imagen</span>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="absolute top-3 right-3 w-10 h-10 rounded-full bg-hbo-blue flex items-center justify-center shadow-lg">
+                                        <span class="text-white font-bold text-sm">#{{ forloop.counter }}</span>
+                                    </div>
+                                    
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-80 transition flex items-end" role="presentation">
+                                        <div class="opacity-0 group-hover:opacity-100 transition p-4 w-full space-y-2">
+                                            <h3 class="font-bold text-lg">{{ pelicula.titulo }}</h3>
+                                            <p class="text-sm text-gray-300">{{ pelicula.duracion_minutos }} min {% if pelicula.año_publicacion %}• {{ pelicula.año_publicacion }}{% endif %}</p>
+                                            <div class="flex gap-1 flex-wrap">
+                                                {% for genero in pelicula.generos.all %}
+                                                    <span class="bg-hbo-blue px-2 py-1 rounded text-xs">{{ genero.nombre }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+    
+    {% if genero_global and peliculas_genero_global %}
+        <section class="space-y-4">
+            <div class="flex items-center gap-2">
+                <div class="w-1 h-8 bg-hbo-blue rounded-full"></div>
+                <h2 class="text-2xl font-semibold text-white">Tendencias Globales - {{ genero_global.nombre }}</h2>
+            </div>
+            
+            <div class="relative">
+                <div class="absolute inset-0 h-80 bg-gradient-to-r from-gray-900/30 via-gray-950/20 to-transparent pointer-events-none rounded-lg"></div>
+                
+                <div class="relative z-10 flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-2 py-3 rounded-lg" style="scroll-behavior: smooth; overflow-y: visible;">
+                    {% for pelicula in peliculas_genero_global %}
+                        <div class="group relative flex-shrink-0 snap-center" style="width: calc(20% - 0.8rem); min-width: calc(20% - 0.8rem);">
+                            <a href="{% url 'movies:movie_detail' pelicula.id %}" class="block" aria-label="Ver detalles de {{ pelicula.titulo }}">
+                                <div class="relative rounded-lg overflow-hidden shadow-lg transition-all duration-700 ease-in-out transform hover:scale-103 hover:shadow-2xl cursor-pointer">
+                                    {% if pelicula.imagen %}
+                                        <img src="{{ pelicula.imagen.url }}" 
+                                             alt="{{ pelicula.titulo }}"
+                                             class="w-full h-72 object-cover">
+                                    {% else %}
+                                        <div class="w-full h-72 bg-dark-gray flex items-center justify-center">
+                                            <span class="text-gray-500">Sin imagen</span>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-80 transition flex items-end" role="presentation">
+                                        <div class="opacity-0 group-hover:opacity-100 transition p-4 w-full space-y-2">
+                                            <h3 class="font-bold text-lg">{{ pelicula.titulo }}</h3>
+                                            <p class="text-sm text-gray-300">{{ pelicula.duracion_minutos }} min {% if pelicula.año_publicacion %}• {{ pelicula.año_publicacion }}{% endif %}</p>
+                                            <div class="flex gap-1 flex-wrap">
+                                                {% for genero in pelicula.generos.all %}
+                                                    <span class="bg-hbo-blue px-2 py-1 rounded text-xs">{{ genero.nombre }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% else %}
+        <div class="text-center py-24 rounded-lg bg-dark-gray">
+            <svg class="w-16 h-16 mx-auto text-gray-600 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 0m0 0l3 0m-3 0v3m0-3v-3"/>
+            </svg>
+            <p class="text-gray-400 text-lg">No hay películas disponibles aún.</p>
+            {% if user.is_staff %}
+                <a href="/admin/movies/movie/add/" class="inline-block mt-6 bg-hbo-blue hover:bg-blue-700 px-6 py-2 rounded-lg text-white transition-all duration-300">
+                    Agregar Primera Película
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+</style>
+{% endblock %}

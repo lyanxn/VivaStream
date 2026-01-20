@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Demasiados Intentos - VivaStream{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center">
+    <div class="max-w-2xl w-full mt-0">
+        <div class="bg-dark-gray rounded-lg shadow-2xl p-8 border-2 border-yellow-600">
+        <div class="flex justify-center mb-6">
+            <div class="bg-yellow-600 rounded-full p-4">
+                <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+        </div>
+        
+        <h1 class="text-3xl font-bold text-center mb-4 text-yellow-400">
+            Cuenta Temporalmente Bloqueada
+        </h1>
+        
+        <div class="space-y-4 text-gray-300 text-center">
+            <p class="text-lg">
+                Hemos detectado demasiados intentos de inicio de sesión desde tu conexión.
+            </p>
+            
+            <div class="bg-black bg-opacity-50 rounded-lg p-6 my-6">
+                <p class="text-sm text-gray-400 mb-3">
+                    Por razones de seguridad, se permiten máximo <span class="text-white font-bold">{{ attempts_allowed }} intentos</span> de inicio de sesión por minuto.
+                </p>
+                <p class="text-xl text-white font-semibold">
+                    Por favor espera <span class="text-hbo-blue">{{ retry_after }} segundos</span> antes de intentar nuevamente.
+                </p>
+            </div>
+
+        </div>
+        
+        <div class="mt-8">
+            <div class="text-center mb-4">
+                <p class="text-sm text-gray-400">Podrás intentar nuevamente en:</p>
+                <p id="countdown" class="text-4xl font-bold text-white mt-2">60s</p>
+            </div>
+            
+            <div class="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+                <div id="progress-bar" class="bg-hbo-blue h-full transition-all duration-1000" style="width: 100%"></div>
+            </div>
+        </div>
+        
+        <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'movies:home' %}" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-center transition">
+                Volver al Inicio
+            </a>
+            <button id="retry-button" disabled class="px-6 py-3 bg-gray-600 rounded-lg text-center cursor-not-allowed opacity-50">
+                Intentar Nuevamente
+            </button>
+        </div>
+    </div>
+    </div>
+</div>
+
+<script>
+    let secondsRemaining = 60;
+    const countdownElement = document.getElementById('countdown');
+    const progressBar = document.getElementById('progress-bar');
+    const retryButton = document.getElementById('retry-button');
+    const totalSeconds = 60;
+    
+    const updateCountdown = function() {
+        if (secondsRemaining > 0) {
+            secondsRemaining = secondsRemaining - 1;
+            countdownElement.textContent = secondsRemaining + 's';
+            
+            const percentageRemaining = (secondsRemaining / totalSeconds) * 100;
+            progressBar.style.width = percentageRemaining + '%';
+        } else {
+            countdownElement.textContent = '¡Listo!';
+            countdownElement.classList.remove('text-white');
+            countdownElement.classList.add('text-green-500');
+            
+            retryButton.disabled = false;
+            retryButton.classList.remove('bg-gray-600', 'cursor-not-allowed', 'opacity-50');
+            retryButton.classList.add('bg-hbo-blue', 'hover:bg-blue-700', 'cursor-pointer');
+            retryButton.textContent = 'Intentar Nuevamente Ahora';
+            retryButton.onclick = function() {
+                window.location.href = '{% url "movies:login" %}';
+            };
+            
+            clearInterval(countdownInterval);
+        }
+    };
+    
+    const countdownInterval = setInterval(updateCountdown, 1000);
+</script>
+{% endblock %}
